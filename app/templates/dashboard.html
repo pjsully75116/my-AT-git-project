@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>QualTrack Dashboard</title>
+	<p>
+		<a href="{{ url_for('main.new_qualification') }}">➕ Add Qualification</a> |
+		<a href="{{ url_for('main.upload_csv') }}">📤 Upload CSV</a> |
+		<a href="{{ url_for('main.export_qualifications') }}">📥 Export</a> |
+		<a href="{{ url_for('main.view_audit_log') }}">View Audit Log</a>
+		<a href="{{ url_for('main.logout') }}">🚪 Logout</a>
+	</p>
+
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        h1 { margin-bottom: 20px; }
+        h2 { margin-top: 40px; }
+        table { border-collapse: collapse; width: 100%; margin-bottom: 30px; }
+        th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
+        th { background-color: #f2f2f2; }
+        .true { color: green; font-weight: bold; }
+        .false { color: red; font-weight: bold; }
+    </style>
+</head>
+<body>
+    <h1>Qualification Dashboard</h1>
+	<form method="get" action="{{ url_for('main.dashboard') }}">
+		<label for="status">Filter by status:</label>
+		<select name="status" onchange="this.form.submit()">
+			<option value="">All</option>
+			<option value="qualified" {% if request.args.get('status') == 'qualified' %}selected{% endif %}>Qualified</option>
+			<option value="sustainment_due" {% if request.args.get('status') == 'sustainment_due' %}selected{% endif %}>Sustainment Due</option>
+			<option value="disqualified" {% if request.args.get('status') == 'disqualified' %}selected{% endif %}>Disqualified</option>
+		</select>
+	</form>
+
+		<p>
+			<a href="/export" style="font-size: 14px; font-weight: bold;">⬇️ Export All Qualifications (CSV)</a>
+		</p>
+
+    {% for name, data in people.items() %}
+		<h2>{{ name }} ({{ data.rate }})</h2>
+		{% if data.duty_sections %}
+			<p><strong>Duty Sections:</strong> {{ data.duty_sections | join(", ") }}</p>
+		{% endif %}
+        <table>
+            <tr>
+                <th>Weapon</th>
+                <th>Date Qualified</th>
+                <th>Expires</th>
+                <th>Qualified</th>
+                <th>Sustainment Due</th>
+                <th>Disqualified</th>
+            </tr>
+			
+			{% set sorted_quals = data.quals | sort(attribute="weapon") %}
+			{% for q in sorted_quals %}
+			<tr>
+				<td>{{ q.weapon }}</td>
+				<td>{{ q.date_qualified }}</td>
+				<td>{{ q.status.expires_on }}</td>
+				<td class="{{ q.status.qualified }}">{{ q.status.qualified }}</td>
+				<td class="{{ q.status.sustainment_due }}">{{ q.status.sustainment_due }}</td>
+				<td class="{{ q.status.disqualified }}">{{ q.status.disqualified }}</td>
+			</tr>
+			{% endfor %}
+
+        </table>
+    {% endfor %}
+</body>
+</html>

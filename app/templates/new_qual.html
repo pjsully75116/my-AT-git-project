@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Add Qualification</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        form { max-width: 500px; }
+        label { display: block; margin-top: 10px; font-weight: bold; }
+        input, select { width: 100%; padding: 8px; margin-top: 5px; }
+        button { margin-top: 20px; padding: 10px 20px; }
+        .flash { margin-top: 20px; font-weight: bold; }
+    </style>
+</head>
+<body>
+    <h1>Add New Qualification</h1>
+
+    {% with messages = get_flashed_messages(with_categories=true) %}
+      {% if messages %}
+        <ul>
+          {% for category, message in messages %}
+            <li class="flash" style="color: {% if category == 'error' %}red{% elif category == 'warning' %}orange{% else %}green{% endif %};">
+              {{ message }}
+            </li>
+          {% endfor %}
+        </ul>
+      {% endif %}
+    {% endwith %}
+
+    <form method="POST">
+        <label for="name">Name</label>
+        <input type="text" name="name" required>
+
+        <label for="rate">Rate</label>
+        <input type="text" name="rate" required>
+		
+		<label for="duty_sections">Duty Sections (comma-separated)</label>
+		<input type="text" name="duty_sections" placeholder="e.g. 1 of 3, 2 of 4">
+
+		<label for="weapon">Weapon</label>
+		<select name="weapon" required>
+			<option value="">-- Select Weapon --</option>
+			{% for weapon in weapons %}
+				<option value="{{ weapon }}">{{ weapon }}</option>
+			{% endfor %}
+		</select>
+
+
+
+        <label for="category">Category</label>
+        <select name="category" required>
+            <option value="2">CAT II</option>
+        </select>
+
+        <label for="date_qualified">Date Qualified</label>
+        <input type="date" name="date_qualified" required>
+
+        <button type="submit">Add Qualification</button>
+    </form>
+</body>
+</html>
