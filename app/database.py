@@ -1,4 +1,12 @@
 import sqlite3
+import os
+
+def get_db_connection():
+    db_path = os.path.join(os.path.dirname(__file__), "qualtrack.db")
+    conn = sqlite3.connect(db_path)
+    conn.row_factory = sqlite3.Row  # Enables name-based access to columns
+    return conn
+    
 
 # Connect to the database (or create it)
 conn = sqlite3.connect("qualtrack.db")

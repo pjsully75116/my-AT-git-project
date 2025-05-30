@@ -23,7 +23,7 @@ from flask_login import login_user, logout_user, login_required, current_user
 from app.qualification_logic import evaluate_qualification
 from app.user_model import User
 from app.auth import login_manager
-
+from app.database import get_db_connection
 
 main = Blueprint("main", __name__, url_prefix="")
 
@@ -38,7 +38,7 @@ def home():
 def dashboard():
     print("📥 Starting dashboard build...")
     db_path = os.path.join(os.path.dirname(os.path.dirname(__file__)), "qualtrack.db")
-    conn = sqlite3.connect(db_path)
+    conn = get_db_connection()
     cursor = conn.cursor()
 
     cursor.execute("""
@@ -132,7 +132,7 @@ def new_qualification():
 
         print("✅ Passed validation")
 
-        conn = sqlite3.connect(db_path)
+        conn = get_db_connection()
         cursor = conn.cursor()
 
         cursor.execute("SELECT id FROM personnel WHERE name = ? AND rate = ?", (name, rate))
@@ -202,7 +202,7 @@ def upload_csv():
         skipped = 0
 
         db_path = os.path.join(os.path.dirname(os.path.dirname(__file__)), "qualtrack.db")
-        conn = sqlite3.connect(db_path)
+        conn = get_db_connection()
         cursor = conn.cursor()
 
         for row in reader:
@@ -264,7 +264,7 @@ import io
 @role_required("admin")  # Only admins should access this
 def audit_log_view():
     db_path = os.path.join(os.path.dirname(__file__), "qualtrack.db")
-    conn = sqlite3.connect(db_path)
+    conn = get_db_connection()
     cursor = conn.cursor()
     cursor.execute("SELECT timestamp, user_id, action, details FROM audit_log ORDER BY id DESC")
     logs = cursor.fetchall()
@@ -277,7 +277,7 @@ def audit_log_view():
 @role_required("rso")
 def export_qualifications():
     db_path = os.path.join(os.path.dirname(os.path.dirname(__file__)), "qualtrack.db")
-    conn = sqlite3.connect(db_path)
+    conn = get_db_connection()
     cursor = conn.cursor()
 
     cursor.execute("""
@@ -309,7 +309,7 @@ def export_qualifications():
 def load_user(user_id):
     
     db_path = os.path.join(os.path.dirname(os.path.dirname(__file__)), "qualtrack.db")
-    conn = sqlite3.connect(db_path)
+    conn = get_db_connection()
     cursor = conn.cursor()
 
     cursor.execute("SELECT id, name, email, password_hash, role FROM users WHERE id = ?", (user_id,))
@@ -325,12 +325,17 @@ def login():
     
     if request.method == "POST":
         email = request.form["email"].strip()
-        password = request.form["password"]
+        password = request.form["password"].strip()
+        
+        # prints the username/password for Troubleshooting; delete later
+        print(f"🔍 Submitted Email: '{email}'")
+        print(f"🔍 Submitted Password: '{password}'")
+        
 # TODO: In CAC-enabled environments, replace this login logic
 # with DOD certificate parsing + role lookup using user.email or DOD ID
 
         db_path = os.path.join(os.path.dirname(os.path.dirname(__file__)), "qualtrack.db")
-        conn = sqlite3.connect(db_path)
+        conn = get_db_connection()
         cursor = conn.cursor()
 
         cursor.execute("SELECT id, name, email, password_hash, role FROM users WHERE email = ?", (email,))
@@ -366,7 +371,7 @@ def logout():
 @role_required("admin")
 def view_audit_log():
     db_path = os.path.join(os.path.dirname(__file__), "audit_log.db")
-    conn = sqlite3.connect(db_path)
+    conn = get_db_connection()
     cursor = conn.cursor()
     cursor.execute("SELECT timestamp, user_email, action, details FROM audit_log ORDER BY timestamp DESC")
     logs = cursor.fetchall()
