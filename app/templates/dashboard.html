@@ -6,9 +6,8 @@
 		<a href="{{ url_for('main.new_qualification') }}">➕ Add Qualification</a> |
 		<a href="{{ url_for('main.upload_csv') }}">📤 Upload CSV</a> |
 		<a href="{{ url_for('main.export_qualifications') }}">📥 Export</a> |
-		<a href="{{ url_for('main.view_audit_log') }}">View Audit Log</a>
 		{% if current_user.role == "admin" %}
-			<a href="{{ url_for('view_audit_log') }}" class="btn btn-secondary">View Audit Log</a>
+			<a href="{{ url_for('main.view_audit_log') }}" class="btn btn-secondary">View Audit Log</a>
 		{% endif %}
 		<a href="{{ url_for('main.logout') }}">🚪 Logout</a>
 	</p>
