@@ -4,9 +4,10 @@ import io
 import csv
 from datetime import datetime
 from app.audit_logger import log_action
-
 from functools import wraps
-from flask import abort
+from flask import abort, request, flash, current_app
+from werkzeug.utils import secure_filename
+
 def role_required(role_name):
     def decorator(f):
         @wraps(f)
@@ -377,3 +378,40 @@ def view_audit_log():
     logs = cursor.fetchall()
     conn.close()
     return render_template("audit_log.html", logs=logs)
+
+
+## section for building an upload capability
+UPLOAD_FOLDER = os.path.join(os.path.dirname(__file__), 'uploads')
+ALLOWED_EXTENSIONS = {'pdf', 'png', 'jpg', 'jpeg'}
+
+if not os.path.exists(UPLOAD_FOLDER):
+    os.makedirs(UPLOAD_FOLDER)
+
+def allowed_file(filename):
+    return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
+
+@main.route('/upload_3591', methods=['GET', 'POST'])
+@role_required('admin')
+def upload_3591():
+    if request.method == 'POST':
+        if 'file' not in request.files:
+            flash('No file part')
+            return redirect(request.url)
+
+        file = request.files['file']
+        if file.filename == '':
+            flash('No selected file')
+            return redirect(request.url)
+
+        print(f"📎 Filename received: {file.filename}")
+        print(f"📎 Allowed? {allowed_file(file.filename)}")
+        if file and allowed_file(file.filename):
+            filename = secure_filename(file.filename)
+            save_path = os.path.join(current_app.config['UPLOAD_FOLDER'], filename)
+            file.save(save_path)
+            print(f"📂 File saved to: {save_path}")
+            flash(f'✅ Upload successful: {filename}')
+            # Placeholder for OCR + parsing pipeline
+            return redirect(url_for('main.upload_3591'))
+
+    return render_template('upload_3591.html')
