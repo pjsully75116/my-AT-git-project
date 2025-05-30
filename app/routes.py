@@ -260,6 +260,18 @@ from flask import send_file
 import csv
 import io
 
+@main.route("/audit-log")
+@role_required("admin")  # Only admins should access this
+def audit_log_view():
+    db_path = os.path.join(os.path.dirname(__file__), "qualtrack.db")
+    conn = sqlite3.connect(db_path)
+    cursor = conn.cursor()
+    cursor.execute("SELECT timestamp, user_id, action, details FROM audit_log ORDER BY id DESC")
+    logs = cursor.fetchall()
+    conn.close()
+    return render_template("audit_log.html", logs=logs)
+
+
 @main.route("/export")
 @login_required
 @role_required("rso")
