@@ -33,4 +33,18 @@ CREATE TABLE IF NOT EXISTS qualifications (
 )
 """)
 
-# Commit and close
+def create_ocr_text_table():
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    cursor.execute("""
+        CREATE TABLE IF NOT EXISTS ocr_text_records (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            filename TEXT NOT NULL,
+            text TEXT NOT NULL,
+            uploaded_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        )
+    """)
+    conn.commit()
+    conn.close()
+    print("✅ Table 'ocr_text_records' ensured.")
+

@@ -2,11 +2,13 @@ import os
 import sqlite3
 import io
 import csv
+
 from datetime import datetime
 from app.audit_logger import log_action
 from functools import wraps
 from flask import abort, request, flash, current_app
 from werkzeug.utils import secure_filename
+from .ocr_pipeline import extract_text_from_pdf, parse_ocr_text
 
 def role_required(role_name):
     def decorator(f):
@@ -412,6 +414,63 @@ def upload_3591():
             print(f"📂 File saved to: {save_path}")
             flash(f'✅ Upload successful: {filename}')
             # Placeholder for OCR + parsing pipeline
+            
+            text = extract_text_from_pdf(save_path)
+            print("📝 OCR Raw Text:\n", text)  # <— debug output
+            # Save raw OCR text to database
+            conn = get_db_connection()
+            cursor = conn.cursor()
+            cursor.execute("""
+                INSERT INTO ocr_text_records (filename, text)
+                VALUES (?, ?)
+            """, (filename, text))
+            conn.commit()
+            conn.close()
+            print("🗃️ OCR text saved to database.")
+
+            
+            # Save OCR text to database
+            conn = get_db_connection()
+            cursor = conn.cursor()
+            cursor.execute("""
+                INSERT INTO ocr_text_records (filename, text)
+                VALUES (?, ?)
+            """, (filename, text))
+            conn.commit()
+            conn.close()
+            print("💾 OCR text stored in database.")
+            
+            # parse the text
+            parsed = parse_ocr_text(text)
+            print("🧠 Parsed Data:", parsed)
+            
+            # Validate required fields before inserting
+            required_fields = ["personnel_id", "weapon", "category", "date_qualified"]
+            missing = [field for field in required_fields if not parsed.get(field)]
+            if missing:
+                print(f"❌ Missing fields: {missing}")
+                flash(f"Incomplete OCR data — missing: {', '.join(missing)}")
+                return redirect(request.url)
+
+            # adding parsed data to the database
+            if parsed:
+                # This block only runs if all required fields are present
+                conn = get_db_connection()
+                cursor = conn.cursor()
+                cursor.execute("""
+                    INSERT INTO qualifications (personnel_id, weapon, category, date_qualified)
+                    VALUES (?, ?, ?, ?)
+                """, (
+                    parsed.get("personnel_id"),
+                    parsed.get("weapon"),
+                    parsed.get("category"),
+                    parsed.get("date_qualified")
+                ))
+                conn.commit()
+                conn.close()
+
+
+            
             return redirect(url_for('main.upload_3591'))
 
     return render_template('upload_3591.html')

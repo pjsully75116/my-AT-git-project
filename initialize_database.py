@@ -70,6 +70,18 @@ CREATE TABLE IF NOT EXISTS audit_log (
 )
 """)
 
+# OCR RECORDS
+cursor.execute("""
+ CREATE TABLE IF NOT EXISTS ocr_text_records (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    filename TEXT NOT NULL,
+    text TEXT NOT NULL,
+    uploaded_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+)
+""")
+print("✅ Table 'ocr_text_records' ensured.")
+
+
 conn.commit()
 conn.close()
 print(f"✅ Database initialized at: {db_path}")
